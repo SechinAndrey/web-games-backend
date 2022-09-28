@@ -4,9 +4,9 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-// import { Logger } from '@nestjs/common';
+import * as config from 'config';
 
-@WebSocketGateway(8080, {
+@WebSocketGateway(config.get('SOCKET_IO.PORT'), {
   cors: {
     origin: '*',
   },
@@ -17,7 +17,6 @@ export class AppGateway {
 
   @SubscribeMessage('drw')
   handleMessage(client: any, payload: any) {
-    // Logger.log(payload);
     this.server.emit('drw', payload);
   }
 }

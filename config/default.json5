@@ -1,0 +1,9 @@
+/*
+  Never add a secret here.
+  Use local.json5 for this.
+*/
+{
+  SOCKET_IO: {
+    PORT: 8080,
+  }
+}
