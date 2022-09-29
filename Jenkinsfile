@@ -1,18 +1,22 @@
 pipeline {
   agent { 
-    node { label "ubuntu20" } 
+    label "ubuntu20"
   }
 
   stages {
     stage('Build') {
       steps {
+        echo '================= [ Start Build ] ================='
         sh "npm install"
         sh "npm run build"
         sh "ls"
+        echo '==================================================='
       }
     }
+    
     stage('Deploy') {
       steps {
+        echo '================= [ Start Deploy ] ================='
         script {
           def remote = [:]
           remote.name = "${REMOTE_NAME}"
@@ -20,24 +24,27 @@ pipeline {
           remote.user = "${REMOTE_USERNAME}"
           remote.allowAnyHosts = true
 
-          withCredentials([sshUserPrivateKey(credentialsId: "${REMOTE_NAME}", keyFileVariable: 'identity')]) {
+          withCredentials([
+            sshUserPrivateKey(credentialsId: "${REMOTE_NAME}", keyFileVariable: 'identity')
+          ]) {
             remote.identityFile = identity
 
-            stage('Copy files to ') {
+            stage("Copy files to ${REMOTE_NAME}") {
               sshPut remote: remote, from: 'dist', into: "${WGB}/"
               sshPut remote: remote, from: 'package.json', into: "${WGB}/"
               sshPut remote: remote, from: 'config/default.json5', into: "${WGB}/config"
             }
             
-            stage('npm install') {
+            stage("npm install on ${REMOTE_NAME}") {
               sshCommand remote: remote, command: "cd ${WGB} && npm install"
             }
 
-            stage("Start ${WGB}") {
-              sshCommand remote: remote, command: "pm2 start ${WGB}.config.js"
+            stage("Start ${WGB} on ${REMOTE_NAME}") {
+              sshCommand remote: remote, command: "cd ${WGB} && pm2 start start.${WGB}.config.js"
             }
           }   
         }
+        echo '===================================================='
       }
     }
   }
